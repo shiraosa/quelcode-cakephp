@@ -23,8 +23,18 @@ class CreateBiditems extends AbstractMigration
             'limit' => 100,
             'null' => false,
         ]);
-        $table->addColumn('finished', 'boolean', [
+        $table->addColumn('detail', 'string', [
             'default' => null,
+            'limit' => 1000,
+            'null' => false,
+        ]);
+        $table->addColumn('iamge_path', 'string', [
+            'default' => null,
+            'limit' => 100,
+            'null' => false,
+        ]);
+        $table->addColumn('finished', 'boolean', [
+            'default' => 0,
             'null' => false,
         ]);
         $table->addColumn('endtime', 'datetime', [
@@ -32,6 +42,10 @@ class CreateBiditems extends AbstractMigration
             'null' => false,
         ]);
         $table->addColumn('created', 'datetime', [
+            'default' => null,
+            'null' => false,
+        ]);
+        $table->addColumn('modified', 'datetime', [
             'default' => null,
             'null' => false,
         ]);
