@@ -14,7 +14,7 @@
 </tr>
 <tr>
 	<th scope="row">商品の詳細情報</th>
-	<td><?= $this->Number->format($biditem->detail) ?></td>
+	<td><?= $this->Text->autoParagraph(h($biditem->detail)) ?></td>
 </tr>
 <tr>
 	<th scope="row">商品の画像</th>
