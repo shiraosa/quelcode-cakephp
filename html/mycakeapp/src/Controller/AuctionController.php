@@ -6,6 +6,8 @@ use App\Controller\AppController;
 use Cake\Event\Event; // added.
 use Exception; // added.
 
+use function Psy\info;
+
 class AuctionController extends AuctionBaseController
 {
 	// デフォルトテーブルを使わない
@@ -86,14 +88,33 @@ class AuctionController extends AuctionBaseController
 		$biditem = $this->Biditems->newEntity();
 		// POST送信時の処理
 		if ($this->request->is('post')) {
-			// $biditemにフォームの送信内容を反映
-			$biditem = $this->Biditems->patchEntity($biditem, $this->request->getData());
-			// $biditemを保存する
-			if ($this->Biditems->save($biditem)) {
-				// 成功時のメッセージ
-				$this->Flash->success(__('保存しました。'));
-				// トップページ（index）に移動
-				return $this->redirect(['action' => 'index']);
+			$file = $this->request->getData('image_path');
+			// 拡張子をチェック
+			$image_type = substr(strtolower(strrchr($file['name'], '.')), 1);
+			$arr_type = array('jpg', 'jpeg', 'gif', 'png', 'JPG', 'JPEG', 'GIF', 'PNG');
+			if(in_array($image_type, $arr_type)){
+				// 保存時にidが生成される
+				$biditem = $this->Biditems->patchEntity($biditem, $this->request->getData());
+				$biditem['image_path'] = "temp";
+				if($this->Biditems->save($biditem)){
+					// idを画像ファイル名に利用する
+					$biditem_id = $biditem->id;
+					$path = WWW_ROOT . 'img/item_image/' . $biditem_id . $image_type;
+					// 画像を保存する
+					move_uploaded_file($file['tmp_name'], $path);
+					// DBのimage_pathを更新する
+					$biditem['image_path'] = $biditem_id . $image_type;
+					$this->Biditems->save($biditem);
+					// 成功時のメッセージ
+					$this->Flash->success(__('保存しました。'));
+					// トップページ（index）へ移動
+					return $this->redirect(['action' => 'index']);
+				}
+				// 失敗時のメッセージ
+				$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
+			}else{
+				// 画像の拡張子が違った場合のメッセージ
+				$this->Flash->error(__('拡張子が.jpg .jpeg .png .gif .JPG .JPEG .PNG .GIFのファイルをアップロードしてください'));
 			}
 			// 失敗時のメッセージ
 			$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
