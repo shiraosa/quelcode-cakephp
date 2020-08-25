@@ -99,11 +99,11 @@ class AuctionController extends AuctionBaseController
 				if($this->Biditems->save($biditem)){
 					// idを画像ファイル名に利用する
 					$biditem_id = $biditem->id;
-					$path = WWW_ROOT . 'img/item_image/' . $biditem_id . $image_type;
+					$path = WWW_ROOT . 'img/item_image/' . $biditem_id . "." . $image_type;
 					// 画像を保存する
 					move_uploaded_file($file['tmp_name'], $path);
 					// DBのimage_pathを更新する
-					$biditem['image_path'] = $biditem_id . $image_type;
+					$biditem['image_path'] = $biditem_id . "." . $image_type;
 					$this->Biditems->save($biditem);
 					// 成功時のメッセージ
 					$this->Flash->success(__('保存しました。'));
