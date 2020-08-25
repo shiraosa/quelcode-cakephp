@@ -1,7 +1,7 @@
 <?= $this->Html->script( 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js', array( 'inline' => false ) ); ?>
 <?= $this->Html->script( 'jquery.plugin', array( 'inline' => false ) ); ?>
 <?= $this->Html->script( 'jquery.countdown', array( 'inline' => false ) ); ?>
-<?= $this->Html->script( 'jquery.countdown-ja', array( 'inline' => false ) ); ?>
+
 <?php
 $date = new DateTime();
 $today = $date->format('Y-m-d h:i a');
@@ -46,7 +46,7 @@ $endtime = $end->format('Y-m-d h:i a');
 	<script type="text/javascript">
 		$(function () {
 			var endtime = new Date('<?= h($biditem->endtime) ?>');;
-			$('#defaultCountdown').countdown({until: endtime});
+			$('#defaultCountdown').countdown({labels: ['年', '月', '週', '日', '時間', '分', '秒'],until: endtime});
 		});
 	</script>
 	<?php else: ?>
