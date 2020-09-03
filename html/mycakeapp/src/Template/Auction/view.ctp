@@ -1,4 +1,15 @@
-<h2>「<?= $biditem->name ?>」の情報</h2>
+<?= $this->Html->script( 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js', array( 'inline' => false ) ); ?>
+<?= $this->Html->script( 'jquery.plugin', array( 'inline' => false ) ); ?>
+<?= $this->Html->script( 'jquery.countdown', array( 'inline' => false ) ); ?>
+
+<?php
+$date = new DateTime();
+$today = $date->format('Y-m-d h:i a');
+$end = new DateTime(h($biditem->endtime));
+$endtime = $end->format('Y-m-d h:i a');
+?>
+
+<h2><?= $biditem->name ?>」の情報</h2>
 <table class="vertical-table">
 <tr>
 	<th class="small" scope="row">出品者</th>
@@ -13,6 +24,14 @@
 	<td><?= $this->Number->format($biditem->id) ?></td>
 </tr>
 <tr>
+	<th scope="row">商品の詳細情報</th>
+	<td><?= $this->Text->autoParagraph(h($biditem->detail)) ?></td>
+</tr>
+<tr>
+	<th scope="row">商品の画像</th>
+	<td><?= $this->Html->image('/img/item_image/' .h($biditem->image_path),array('height'=>200, 'width'=>200)) ?></td>
+</tr>
+<tr>
 	<th scope="row">終了時間</th>
 	<td><?= h($biditem->endtime) ?></td>
 </tr>
@@ -21,8 +40,18 @@
 	<td><?= h($biditem->created) ?></td>
 </tr>
 <tr>
-	<th scope="row"><?= __('終了した？') ?></th>
-	<td><?= $biditem->finished ? __('Yes') : __('No'); ?></td>
+	<th scope="row"><?= __('残り時間') ?></th>
+	<?php if($today < $endtime): ?>
+	<td><div id="defaultCountdown"></div></td>
+	<script type="text/javascript">
+		$(function () {
+			var endtime = new Date('<?= h($biditem->endtime) ?>');;
+			$('#defaultCountdown').countdown({labels: ['年', '月', '週', '日', '時間', '分', '秒'],until: endtime});
+		});
+	</script>
+	<?php else: ?>
+	<td><? echo "このオークションは終了しました"?></td>
+	<?php endif; ?>
 </tr>
 </table>
 <div class="related">
