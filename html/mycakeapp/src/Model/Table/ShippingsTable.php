@@ -40,7 +40,7 @@ class ShippingsTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->belongsTo('Bidinfos', [
+        $this->belongsTo('Bidinfo', [
             'foreignKey' => 'bidinfo_id',
             'joinType' => 'INNER',
         ]);

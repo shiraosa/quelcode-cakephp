@@ -42,15 +42,15 @@ class RatingsTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->belongsTo('RatedUsers', [
+        $this->belongsTo('Users', [
             'foreignKey' => 'rated_user_id',
             'joinType' => 'INNER',
         ]);
-        $this->belongsTo('RatedByUsers', [
+        $this->belongsTo('Users', [
             'foreignKey' => 'rated_by_user_id',
             'joinType' => 'INNER',
         ]);
-        $this->belongsTo('Bidinfos', [
+        $this->belongsTo('Bidinfo', [
             'foreignKey' => 'bidinfo_id',
             'joinType' => 'INNER',
         ]);
@@ -93,7 +93,7 @@ class RatingsTable extends Table
     {
         $rules->add($rules->existsIn(['rated_user_id'], 'RatedUsers'));
         $rules->add($rules->existsIn(['rated_by_user_id'], 'RatedByUsers'));
-        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfos'));
+        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfo'));
 
         return $rules;
     }
