@@ -215,6 +215,15 @@ class AuctionController extends AuctionBaseController
 	// 取引成立後の画面
 	public function contact($bidinfo_id = null)
 	{
+		// bidinfo_idが$bidinfo_idの$ratingをRatingsテーブルから取得
+		try {
+			$hasRated = $this->Ratings->find()
+				->where(['bidinfo_id' => $bidinfo_id])
+				->andWhere(['rated_by_user_id' => $this->Auth->user('id')]);
+			$hasRated = $hasRated->first();
+		} catch (Exception $e) {
+			$hasRated = null;
+		}
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
 		try {
 			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
@@ -230,6 +239,7 @@ class AuctionController extends AuctionBaseController
 
 			// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
 			if (!in_array($this->Auth->user('id'), $permitted_id)) {
+				$this->Flash->error('アクセス権限がありません。');
 				return $this->redirect(['action' => 'index']);
 			}
 			// Ratingを新たに用意
@@ -253,7 +263,9 @@ class AuctionController extends AuctionBaseController
 				'bidinfo',
 				'permitted_id',
 				'exhibitor_id',
-				'bidder_id'
+				'bidder_id',
+				'rating',
+				'hasRated'
 			));
 		} catch (Exception $e) {
 			$bidinfo = null;

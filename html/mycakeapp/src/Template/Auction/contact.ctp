@@ -1,7 +1,35 @@
-<?php if (!empty($bidinfo)) : ?>
+<?php if (!empty($bidinfo && empty($hasRated))) : ?>
     <h2>「<?= $bidinfo->biditem->name ?>」の配送情報</h2>
     <?php if (isset($shippingTo) && (int)$shippingTo->is_shipped === 1 && (int)$shippingTo->is_received === 1) : ?>
-        <h3>取引完了</h3>
+        <h3>取引が完了しました。取引相手の評価をしてください</h3>
+        <?= $this->Form->create(
+            $rating,
+            [
+                'type' => 'post',
+                'url' => ['controller' => 'Ratings', 'action' => 'add']
+            ]
+        ); ?>
+        <table>
+            <tr>
+                <th>満足度を５段階で評価してください。1(悪い)~5(良い)</th>
+                <td>
+                    <?= $this->Form->select(
+                        'ratings',
+                        ['' => '選択してください', '1' => 1, '2' => 2, '3' => 3, '4' => 4, '5' => 5]
+                    )
+                    ?>
+                </td>
+            </tr>
+            <tr>
+                <th>コメント</th>
+                <td><?= $this->Form->textarea('comment') ?></td>
+            </tr>
+        </table>
+        <?php echo $this->Form->hidden('bidinfo_id', ['value' => $bidinfo->id]); ?>
+        <?php echo $this->Form->hidden('rated_user_id', ['value' => $bidinfo->user_id]); ?>
+        <?php echo $this->Form->hidden('rated_by_user_id', ['value' => $authuser['id']]); ?>
+        <?= $this->Form->button('Submit') ?>
+        <?= $this->Form->end() ?>
     <?php else : ?>
         <?php if (isset($shippingTo)) : ?>
             <table class="vertical-table">
