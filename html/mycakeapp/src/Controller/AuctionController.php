@@ -276,4 +276,23 @@ class AuctionController extends AuctionBaseController
 			}
 		}
 	}
+	public function itemShipped()
+	{
+		$shippingId = $this->request->query['id'];
+		$shippingInfo = $this->Shippings->get($shippingId);
+		$shippingInfo->is_shipped = 1;
+		$this->Shippings->save($shippingInfo);
+
+		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+	}
+
+	public function itemReceived()
+	{
+		$shippingId = $this->request->query['id'];
+		$shippingInfo = $this->Shippings->get($shippingId);
+		$shippingInfo->is_received = 1;
+		$this->Shippings->save($shippingInfo);
+
+		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+	}
 }
