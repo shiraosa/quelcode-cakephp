@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Model\Table;
 
 use Cake\ORM\Query;
@@ -9,7 +10,7 @@ use Cake\Validation\Validator;
 /**
  * Shippings Model
  *
- * @property \App\Model\Table\BidinfosTable&\Cake\ORM\Association\BelongsTo $Bidinfos
+ * @property \App\Model\Table\BidinfoTable&\Cake\ORM\Association\BelongsTo $Bidinfos
  *
  * @method \App\Model\Entity\Shipping get($primaryKey, $options = [])
  * @method \App\Model\Entity\Shipping newEntity($data = null, array $options = [])
@@ -96,7 +97,7 @@ class ShippingsTable extends Table
      */
     public function buildRules(RulesChecker $rules)
     {
-        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfos'));
+        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfo'));
 
         return $rules;
     }
