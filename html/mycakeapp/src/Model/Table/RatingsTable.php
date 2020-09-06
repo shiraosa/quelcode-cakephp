@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Model\Table;
 
 use Cake\ORM\Query;
@@ -9,8 +10,6 @@ use Cake\Validation\Validator;
 /**
  * Ratings Model
  *
- * @property \App\Model\Table\RatedUsersTable&\Cake\ORM\Association\BelongsTo $RatedUsers
- * @property \App\Model\Table\RatedByUsersTable&\Cake\ORM\Association\BelongsTo $RatedByUsers
  * @property \App\Model\Table\BidinfosTable&\Cake\ORM\Association\BelongsTo $Bidinfos
  *
  * @method \App\Model\Entity\Rating get($primaryKey, $options = [])
@@ -42,17 +41,14 @@ class RatingsTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->belongsTo('Users', [
-            'foreignKey' => 'rated_user_id',
-            'joinType' => 'INNER',
-        ]);
-        $this->belongsTo('Users', [
-            'foreignKey' => 'rated_by_user_id',
-            'joinType' => 'INNER',
-        ]);
         $this->belongsTo('Bidinfo', [
             'foreignKey' => 'bidinfo_id',
             'joinType' => 'INNER',
+        ]);
+
+        $this->belongsTo('Users', [
+            'foreignKey' => 'rated_user_id',
+            'foreignKey' => 'rated_by_user_id',
         ]);
     }
 
@@ -67,6 +63,16 @@ class RatingsTable extends Table
         $validator
             ->integer('id')
             ->allowEmptyString('id', null, 'create');
+
+        $validator
+            ->integer('rated_user_id')
+            ->requirePresence('rated_user_id', 'create')
+            ->notEmptyString('rated_user_id');
+
+        $validator
+            ->integer('rated_by_user_id')
+            ->requirePresence('rated_by_user_id', 'create')
+            ->notEmptyString('rated_by_user_id');
 
         $validator
             ->integer('rating')
@@ -91,9 +97,9 @@ class RatingsTable extends Table
      */
     public function buildRules(RulesChecker $rules)
     {
-        $rules->add($rules->existsIn(['rated_user_id'], 'RatedUsers'));
-        $rules->add($rules->existsIn(['rated_by_user_id'], 'RatedByUsers'));
         $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfo'));
+        $rules->add($rules->existsIn(['rated_user_id'], 'Users'));
+        $rules->add($rules->existsIn(['rated_by_user_id'], 'Users'));
 
         return $rules;
     }

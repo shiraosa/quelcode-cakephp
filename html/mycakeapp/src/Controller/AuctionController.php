@@ -227,7 +227,7 @@ class AuctionController extends AuctionBaseController
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
 		try {
 			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-				'contain' => ['Biditems', 'Biditems.Users']
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
 			]);
 
 			// 出品者ID、落札者IDをそれぞれ定義
@@ -246,6 +246,7 @@ class AuctionController extends AuctionBaseController
 			$rating = $this->Ratings->newEntity();
 			// shippingInfoを新たに用意
 			$shippingInfo = $this->Shippings->newEntity();
+
 			// POST送信時の処理
 			// bidinfo_idが$bidinfo_idの$shippingToを取得する
 			try {

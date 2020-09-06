@@ -1,7 +1,31 @@
-<?php if (!empty($bidinfo && empty($hasRated))) : ?>
-    <h2>「<?= $bidinfo->biditem->name ?>」の配送情報</h2>
+<?php
+if (!empty($hasRated)) : ?>
+    <h2>「<?= $bidinfo->biditem->name ?>」の取引評価</h2>
+    <h1>取引完了。ご利用ありがとうございました。</h1>
+    <table class="vertical-table">
+        <tr>
+            <th scope="row">取引相手</th>
+            <?php if ($authuser['id'] === $bidder_id) : ?>
+                <td><?= $bidinfo->biditem->user->username ?></td>
+            <?php elseif ($authuser['id'] === $exhibitor_id) : ?>
+                <td><?= $bidinfo->user->username ?></td>
+            <?php endif; ?>
+        </tr>
+        <tr>
+            <th scope="row">取引評価</th>
+            <td><?= $hasRated->rating ?></td>
+        </tr>
+        <tr>
+            <th scope="row">取引評価コメント</th>
+            <td><?= $hasRated->comment ?></td>
+        </tr>
+    </table>
+<?php endif; ?>
+
+<?php if (!empty($bidinfo) && empty($hasRated)) : ?>
     <?php if (isset($shippingTo) && (int)$shippingTo->is_shipped === 1 && (int)$shippingTo->is_received === 1) : ?>
-        <h3>取引が完了しました。取引相手の評価をしてください</h3>
+        <h2>「<?= $bidinfo->biditem->name ?>」の取引評価</h2>
+        <h3>取引完了。取引相手を評価してください。</h3>
         <?= $this->Form->create(
             $rating,
             [
@@ -14,7 +38,7 @@
                 <th>満足度を５段階で評価してください。1(悪い)~5(良い)</th>
                 <td>
                     <?= $this->Form->select(
-                        'ratings',
+                        'rating',
                         ['' => '選択してください', '1' => 1, '2' => 2, '3' => 3, '4' => 4, '5' => 5]
                     )
                     ?>
@@ -26,7 +50,13 @@
             </tr>
         </table>
         <?php echo $this->Form->hidden('bidinfo_id', ['value' => $bidinfo->id]); ?>
-        <?php echo $this->Form->hidden('rated_user_id', ['value' => $bidinfo->user_id]); ?>
+        <!-- ログイン中のユーザが出品者の場合は、落札者を評価 -->
+        <?php if ($authuser['id'] === $exhibitor_id) : ?>
+            <?php echo $this->Form->hidden('rated_user_id', ['value' => $bidinfo->user_id]); ?>
+            <!-- ログイン中のユーザが落札者の場合は、出品者を評価 -->
+        <?php elseif ($authuser['id'] === $bidder_id) : ?>
+            <?php echo $this->Form->hidden('rated_user_id', ['value' => $bidinfo->biditem->user_id]); ?>
+        <?php endif; ?>
         <?php echo $this->Form->hidden('rated_by_user_id', ['value' => $authuser['id']]); ?>
         <?= $this->Form->button('Submit') ?>
         <?= $this->Form->end() ?>
@@ -93,6 +123,4 @@
             </table>
         <?php endif; ?>
     <?php endif; ?>
-<?php else : ?>
-    <h2>※落札情報はありません。</h2>
 <?php endif; ?>

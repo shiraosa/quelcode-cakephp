@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Controller\AppController;
@@ -20,7 +21,7 @@ class RatingsController extends AppController
     public function index()
     {
         $this->paginate = [
-            'contain' => ['RatedUsers', 'RatedByUsers', 'Bidinfos'],
+            'contain' => ['Bidinfo'],
         ];
         $ratings = $this->paginate($this->Ratings);
 
@@ -37,7 +38,7 @@ class RatingsController extends AppController
     public function view($id = null)
     {
         $rating = $this->Ratings->get($id, [
-            'contain' => ['RatedUsers', 'RatedByUsers', 'Bidinfos'],
+            'contain' => ['Bidinfo'],
         ]);
 
         $this->set('rating', $rating);
@@ -54,16 +55,17 @@ class RatingsController extends AppController
         if ($this->request->is('post')) {
             $rating = $this->Ratings->patchEntity($rating, $this->request->getData());
             if ($this->Ratings->save($rating)) {
-                $this->Flash->success(__('The rating has been saved.'));
+                $this->Flash->success(__('取引評価の保存をしました'));
 
-                return $this->redirect(['action' => 'index']);
+                return $this->redirect([
+                    'controller' => 'auction', 'action' => 'contact',
+                    $rating->bidinfo_id
+                ]);
             }
-            $this->Flash->error(__('The rating could not be saved. Please, try again.'));
+            $this->Flash->error(__('保存に失敗しましたもう一度やり直してください'));
         }
-        $ratedUsers = $this->Ratings->RatedUsers->find('list', ['limit' => 200]);
-        $ratedByUsers = $this->Ratings->RatedByUsers->find('list', ['limit' => 200]);
-        $bidinfos = $this->Ratings->Bidinfos->find('list', ['limit' => 200]);
-        $this->set(compact('rating', 'ratedUsers', 'ratedByUsers', 'bidinfos'));
+        $bidinfo = $this->Ratings->Bidinfo->find('list', ['limit' => 200]);
+        $this->set(compact('rating', 'bidinfo'));
     }
 
     /**
@@ -81,16 +83,17 @@ class RatingsController extends AppController
         if ($this->request->is(['patch', 'post', 'put'])) {
             $rating = $this->Ratings->patchEntity($rating, $this->request->getData());
             if ($this->Ratings->save($rating)) {
-                $this->Flash->success(__('The rating has been saved.'));
+                $this->Flash->success(__('保存されました'));
 
-                return $this->redirect(['action' => 'index']);
+                return $this->redirect([
+                    'controller' => 'auction', 'action' => 'contact',
+                    $rating->bidinfo_id
+                ]);
             }
-            $this->Flash->error(__('The rating could not be saved. Please, try again.'));
+            $this->Flash->error(__('保存に失敗しました'));
         }
-        $ratedUsers = $this->Ratings->RatedUsers->find('list', ['limit' => 200]);
-        $ratedByUsers = $this->Ratings->RatedByUsers->find('list', ['limit' => 200]);
-        $bidinfos = $this->Ratings->Bidinfos->find('list', ['limit' => 200]);
-        $this->set(compact('rating', 'ratedUsers', 'ratedByUsers', 'bidinfos'));
+        $bidinfo = $this->Ratings->Bidinfo->find('list', ['limit' => 200]);
+        $this->set(compact('rating', 'bidinfo'));
     }
 
     /**
