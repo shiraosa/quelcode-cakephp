@@ -46,9 +46,15 @@ class RatingsTable extends Table
             'joinType' => 'INNER',
         ]);
 
+        $this->belongsTo('Biditems', [
+            'foreignKey' => 'biditem_id',
+            'joinType' => 'INNER',
+        ]);
+
         $this->belongsTo('Users', [
             'foreignKey' => 'rated_user_id',
             'foreignKey' => 'rated_by_user_id',
+            'joinType' => 'INNER',
         ]);
     }
 
