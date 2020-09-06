@@ -79,7 +79,7 @@ if (!empty($hasRated)) : ?>
             <?php if ($authuser['id'] === $bidder_id) : ?>
                 <?php if ((int)$shippingTo->is_shipped === 1) : ?>
                     <h3>出品者様が商品を発送しました。</h3>
-                    <a href="<?= $this->Url->build(['action' => 'itemReceived']); ?>?id=<?= $shippingTo->id; ?>" class="notification">受取完了</a>
+                    <a href="<?= $this->Url->build(['action' => 'itemReceived']); ?>?id=<?= $shippingTo->id; ?>" class="notification">受取完了を通知する</a>
                 <?php else : ?>
                     <h3>商品の発送をお待ちください。</h3>
                 <?php endif; ?>
@@ -87,7 +87,7 @@ if (!empty($hasRated)) : ?>
                 <?php if ((int)$shippingTo->is_shipped === 1) : ?>
                     <h3>受取完了連絡待ち。</h3>
                 <?php else : ?>
-                    <a href="<?= $this->Url->build(['action' => 'itemShipped']); ?>?id=<?= $shippingTo->id; ?>" class="notification">発送完了</a>
+                    <a href="<?= $this->Url->build(['action' => 'itemShipped']); ?>?id=<?= $shippingTo->id; ?>" class="notification">発送完了を通知する</a>
                 <?php endif; ?>
             <?php endif; ?>
         <?php endif; ?>
