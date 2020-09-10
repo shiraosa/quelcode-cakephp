@@ -289,23 +289,65 @@ class AuctionController extends AuctionBaseController
 			}
 		}
 	}
-	public function itemShipped()
+	public function itemShipped($bidinfo_id = null)
 	{
-		$shippingId = $this->request->query['id'];
-		$shippingInfo = $this->Shippings->get($shippingId);
-		$shippingInfo->is_shipped = 1;
-		$this->Shippings->save($shippingInfo);
+		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
 
-		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+			// 出品者IDをそれぞれ定義
+			$exhibitor_id = $bidinfo->biditem->user_id;
+
+			// アクセスを許可するユーザのIDを配列$permitted_idに格納
+			$permitted_id = array($exhibitor_id);
+
+			// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+			if (!in_array($this->Auth->user('id'), $permitted_id)) {
+				$this->Flash->error('アクセス権限がありません。');
+				return $this->redirect(['action' => 'index']);
+			}
+			$shippingId = $this->request->query['id'];
+			$shippingInfo = $this->Shippings->get($shippingId);
+			$shippingInfo->is_shipped = 1;
+			$this->Shippings->save($shippingInfo);
+
+			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+		} catch (Exception $e) {
+			$bidinfo = null;
+		}
 	}
 
-	public function itemReceived()
+	public function itemReceived($bidinfo_id = null)
 	{
-		$shippingId = $this->request->query['id'];
-		$shippingInfo = $this->Shippings->get($shippingId);
-		$shippingInfo->is_received = 1;
-		$this->Shippings->save($shippingInfo);
+		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
 
-		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+			//落札者IDを定義
+			$bidder_id = $bidinfo->user_id;
+
+			// アクセスを許可するユーザのIDを配列$permitted_idに格納
+			$permitted_id = array($bidder_id);
+
+			// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+			if (!in_array($this->Auth->user('id'), $permitted_id)) {
+				$this->Flash->error('アクセス権限がありません。');
+				return $this->redirect(['action' => 'index']);
+			}
+			$shippingId = $this->request->query['id'];
+			$shippingInfo = $this->Shippings->get($shippingId);
+			$shippingInfo->is_received = 1;
+			$this->Shippings->save($shippingInfo);
+
+			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+
+			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+		} catch (Exception $e) {
+			$bidinfo = null;
+		}
 	}
 }
