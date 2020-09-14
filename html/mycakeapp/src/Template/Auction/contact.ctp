@@ -30,7 +30,7 @@ if (!empty($hasRated)) : ?>
             $rating,
             [
                 'type' => 'post',
-                'url' => ['controller' => 'Ratings', 'action' => 'add']
+                'url' => ['controller' => 'Ratings', 'action' => 'add', $bidinfo->id]
             ]
         ); ?>
         <table>
@@ -49,15 +49,6 @@ if (!empty($hasRated)) : ?>
                 <td><?= $this->Form->textarea('comment') ?></td>
             </tr>
         </table>
-        <?php echo $this->Form->hidden('bidinfo_id', ['value' => $bidinfo->id]); ?>
-        <!-- ログイン中のユーザが出品者の場合は、落札者を評価 -->
-        <?php if ($authuser['id'] === $exhibitor_id) : ?>
-            <?php echo $this->Form->hidden('rated_user_id', ['value' => $bidinfo->user_id]); ?>
-            <!-- ログイン中のユーザが落札者の場合は、出品者を評価 -->
-        <?php elseif ($authuser['id'] === $bidder_id) : ?>
-            <?php echo $this->Form->hidden('rated_user_id', ['value' => $bidinfo->biditem->user_id]); ?>
-        <?php endif; ?>
-        <?php echo $this->Form->hidden('rated_by_user_id', ['value' => $authuser['id']]); ?>
         <?= $this->Form->button('Submit') ?>
         <?= $this->Form->end() ?>
     <?php else : ?>

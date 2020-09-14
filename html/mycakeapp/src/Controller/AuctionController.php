@@ -241,6 +241,22 @@ class AuctionController extends AuctionBaseController
 			if (!in_array($this->Auth->user('id'), $permitted_id)) {
 				$this->Flash->error('アクセス権限がありません。');
 				return $this->redirect(['action' => 'index']);
+				$rating = $this->Ratings->newEntity();
+
+				if ($this->request->is('post')) {
+					$rating = $this->Ratings->patchEntity($rating, $this->request->getData());
+					if ($this->Ratings->save($rating)) {
+						$this->Flash->success(__('取引評価の保存をしました'));
+
+						return $this->redirect([
+							'controller' => 'auction', 'action' => 'contact',
+							$rating->bidinfo_id
+						]);
+					}
+					$this->Flash->error(__('保存に失敗しましたもう一度やり直してください'));
+				}
+				$bidinfo = $this->Ratings->Bidinfo->find('list', ['limit' => 200]);
+				$this->set(compact('rating', 'bidinfo'));
 			}
 			// Ratingを新たに用意
 			$rating = $this->Ratings->newEntity();
@@ -276,6 +292,7 @@ class AuctionController extends AuctionBaseController
 	public function shipping()
 	{
 		$shippingInfo = $this->Shippings->newEntity();
+
 		// POST送信時の処理
 		if ($this->request->is('post')) {
 			// 送信されたフォームで$bidmsgを更新
@@ -342,8 +359,6 @@ class AuctionController extends AuctionBaseController
 			$shippingInfo = $this->Shippings->get($shippingId);
 			$shippingInfo->is_received = 1;
 			$this->Shippings->save($shippingInfo);
-
-			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
 
 			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
 		} catch (Exception $e) {
