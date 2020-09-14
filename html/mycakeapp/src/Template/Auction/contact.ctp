@@ -83,18 +83,20 @@ if (!empty($hasRated)) : ?>
             <?php endif; ?>
         <?php endif; ?>
         <?php if ($authuser['id'] === $bidder_id && !isset($shippingTo)) : ?>
-            <?= $this->Form->create($shippingInfo, ['action' => 'shipping']) ?>
+            <?= $this->Form->create(
+                $shippingInfo,
+                [
+                    'type' => 'post',
+                    'url' => ['controller' => 'Auction', 'action' => 'shipping', $bidinfo->id]
+                ]
+            ) ?>
             <fieldset>
                 <legend>※配送先情報を入力：</legend>
                 <?php
-                echo $this->Form->hidden('bidinfo_id', ['value' => $bidinfo->id]);
-                echo $this->Form->hidden('user_id', ['value' => $authuser['id']]);
                 echo '<p><strong>USER: ' . $authuser['username'] . '</strong></p>';
                 echo $this->Form->control('name', ['placeholder' => '受取人の名前を入力してください。']);
                 echo $this->Form->control('address', ['placeholder' => '住所を入力してください。']);
                 echo $this->Form->control('phone_number', ['placeholder' => '000-0000-0000 のフォーマットで入力してください。']);
-                echo $this->Form->hidden('is_shipped', ['value' => 0]);
-                echo $this->Form->hidden('is_received', ['value' => 0]);
                 ?>
             </fieldset>
             <?= $this->Form->button(__('Submit')) ?>

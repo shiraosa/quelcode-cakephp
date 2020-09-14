@@ -289,21 +289,46 @@ class AuctionController extends AuctionBaseController
 		}
 	}
 
-	public function shipping()
+	public function shipping($bidinfo_id = null)
 	{
-		$shippingInfo = $this->Shippings->newEntity();
+		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
 
-		// POST送信時の処理
-		if ($this->request->is('post')) {
-			// 送信されたフォームで$bidmsgを更新
-			$shippingInfo = $this->Shippings->patchEntity($shippingInfo, $this->request->getData());
-			// shippingを保存
-			if ($this->Shippings->save($shippingInfo)) {
-				$this->Flash->success(__('保存しました。'));
-				return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
-			} else {
-				$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
+			//落札者IDを定義
+			$bidder_id = $bidinfo->user_id;
+
+			// アクセスを許可するユーザのIDを配列$permitted_idに格納
+			$permitted_id = array($bidder_id);
+
+			// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+			if (!in_array($this->Auth->user('id'), $permitted_id)) {
+				$this->Flash->error('アクセス権限がありません。');
+				return $this->redirect(['action' => 'index']);
 			}
+			$shippingInfo = $this->Shippings->newEntity();
+
+			// POST送信時の処理
+			if ($this->request->is('post')) {
+				// 送信されたフォームで$shippingInfoを更新
+				$shippingInfo = $this->Shippings->patchEntity($shippingInfo, $this->request->getData());
+
+				$shippingInfo['bidinfo_id'] = $bidinfo_id;
+				$shippingInfo['user_id'] = $this->Auth->user('id');
+				$shippingInfo['is_shipped'] = 0;
+				$shippingInfo['is_received'] = 0;
+				// shippingを保存
+				if ($this->Shippings->save($shippingInfo)) {
+					$this->Flash->success(__('保存しました。'));
+					return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+				} else {
+					$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
+				}
+			}
+		} catch (Exception $e) {
+			$bidinfo = null;
 		}
 	}
 	public function itemShipped($bidinfo_id = null)
@@ -314,7 +339,7 @@ class AuctionController extends AuctionBaseController
 				'contain' => ['Biditems', 'Biditems.Users', 'Users']
 			]);
 
-			// 出品者IDをそれぞれ定義
+			// 出品者IDを定義
 			$exhibitor_id = $bidinfo->biditem->user_id;
 
 			// アクセスを許可するユーザのIDを配列$permitted_idに格納
