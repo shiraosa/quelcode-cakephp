@@ -76,54 +76,50 @@ class RatingsController extends AuctionBaseController
     public function add($bidinfo_id = null)
     {
         // idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-        try {
-            $bidinfo = $this->Bidinfo->get($bidinfo_id, [
-                'contain' => ['Biditems', 'Biditems.Users', 'Users']
-            ]);
+        $bidinfo = $this->Bidinfo->get($bidinfo_id, [
+            'contain' => ['Biditems', 'Biditems.Users', 'Users']
+        ]);
 
-            // 出品者ID、落札者IDをそれぞれ定義
-            $exhibitor_id = $bidinfo->biditem->user_id;
-            $bidder_id = $bidinfo->user_id;
+        // 出品者ID、落札者IDをそれぞれ定義
+        $exhibitor_id = $bidinfo->biditem->user_id;
+        $bidder_id = $bidinfo->user_id;
 
-            // 上の二つをアクセスを許可するユーザのIDに設定し配列$permitted_idに格納
-            $permitted_id = array($exhibitor_id, $bidder_id);
+        // 上の二つをアクセスを許可するユーザのIDに設定し配列$permitted_idに格納
+        $permitted_id = array($exhibitor_id, $bidder_id);
 
-            // ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
-            if (!in_array($this->Auth->user('id'), $permitted_id)) {
-                $this->Flash->error('アクセス権限がありません。');
-                return $this->redirect(['action' => 'index']);
-            }
-            // POST送信時の処理
-            if ($this->request->is('post')) {
-                //インスタンスを用意
-                $rating = $this->Ratings->newEntity();
-                $rating = $this->Ratings->patchEntity($rating, $this->request->getData());
-
-                $rating['bidinfo_id'] = $bidinfo_id;
-                //ログイン中のユーザが出品者の場合は、落札者を評価,ログイン中のユーザが落札者の場合は、出品者を評価
-                if ($this->Auth->user('id') === $exhibitor_id) {
-                    $rating['rated_user_id'] = $bidinfo->user_id;
-                } elseif ($this->Auth->user('id') === $bidder_id) {
-                    $rating['rated_user_id'] = $bidinfo->biditem->user_id;
-                }
-
-                $rating['rated_by_user_id'] = $this->Auth->user('id');
-
-                if ($this->Ratings->save($rating)) {
-                    $this->Flash->success(__('取引評価の保存をしました'));
-
-                    return $this->redirect([
-                        'controller' => 'auction', 'action' => 'contact',
-                        $rating->bidinfo_id
-                    ]);
-                }
-                $this->Flash->error(__('保存に失敗しましたもう一度やり直してください'));
-            }
-            $bidinfo = $this->Ratings->Bidinfo->find('list', ['limit' => 200]);
-            $this->set(compact('rating', 'bidinfo'));
-        } catch (Exception $e) {
-            $bidinfo = null;
+        // ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+        if (!in_array($this->Auth->user('id'), $permitted_id)) {
+            $this->Flash->error('アクセス権限がありません。');
+            return $this->redirect(['action' => 'index']);
         }
+        // POST送信時の処理
+        if ($this->request->is('post')) {
+            //インスタンスを用意
+            $rating = $this->Ratings->newEntity();
+            $rating = $this->Ratings->patchEntity($rating, $this->request->getData());
+
+            $rating['bidinfo_id'] = $bidinfo_id;
+            //ログイン中のユーザが出品者の場合は、落札者を評価,ログイン中のユーザが落札者の場合は、出品者を評価
+            if ($this->Auth->user('id') === $exhibitor_id) {
+                $rating['rated_user_id'] = $bidinfo->user_id;
+            } elseif ($this->Auth->user('id') === $bidder_id) {
+                $rating['rated_user_id'] = $bidinfo->biditem->user_id;
+            }
+
+            $rating['rated_by_user_id'] = $this->Auth->user('id');
+
+            if ($this->Ratings->save($rating)) {
+                $this->Flash->success(__('取引評価の保存をしました'));
+
+                return $this->redirect([
+                    'controller' => 'auction', 'action' => 'contact',
+                    $rating->bidinfo_id
+                ]);
+            }
+            $this->Flash->error(__('保存に失敗しましたもう一度やり直してください'));
+        }
+        $bidinfo = $this->Ratings->Bidinfo->find('list', ['limit' => 200]);
+        $this->set(compact('rating', 'bidinfo'));
     }
 
     public function ratings()

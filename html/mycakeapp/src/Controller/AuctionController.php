@@ -225,169 +225,153 @@ class AuctionController extends AuctionBaseController
 			$hasRated = null;
 		}
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-		try {
-			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-				'contain' => ['Biditems', 'Biditems.Users', 'Users']
-			]);
+		$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+			'contain' => ['Biditems', 'Biditems.Users', 'Users']
+		]);
 
-			// 出品者ID、落札者IDをそれぞれ定義
-			$exhibitor_id = $bidinfo->biditem->user_id;
-			$bidder_id = $bidinfo->user_id;
+		// 出品者ID、落札者IDをそれぞれ定義
+		$exhibitor_id = $bidinfo->biditem->user_id;
+		$bidder_id = $bidinfo->user_id;
 
-			// 上の二つをアクセスを許可するユーザのIDに設定し配列$permitted_idに格納
-			$permitted_id = array($exhibitor_id, $bidder_id);
+		// 上の二つをアクセスを許可するユーザのIDに設定し配列$permitted_idに格納
+		$permitted_id = array($exhibitor_id, $bidder_id);
 
-			// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
-			if (!in_array($this->Auth->user('id'), $permitted_id)) {
-				$this->Flash->error('アクセス権限がありません。');
-				return $this->redirect(['action' => 'index']);
-				$rating = $this->Ratings->newEntity();
-
-				if ($this->request->is('post')) {
-					$rating = $this->Ratings->patchEntity($rating, $this->request->getData());
-					if ($this->Ratings->save($rating)) {
-						$this->Flash->success(__('取引評価の保存をしました'));
-
-						return $this->redirect([
-							'controller' => 'auction', 'action' => 'contact',
-							$rating->bidinfo_id
-						]);
-					}
-					$this->Flash->error(__('保存に失敗しましたもう一度やり直してください'));
-				}
-				$bidinfo = $this->Ratings->Bidinfo->find('list', ['limit' => 200]);
-				$this->set(compact('rating', 'bidinfo'));
-			}
-			// Ratingを新たに用意
+		// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+		if (!in_array($this->Auth->user('id'), $permitted_id)) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
 			$rating = $this->Ratings->newEntity();
-			// shippingInfoを新たに用意
-			$shippingInfo = $this->Shippings->newEntity();
 
-			// POST送信時の処理
-			// bidinfo_idが$bidinfo_idの$shippingToを取得する
-			try {
-				$shippingTo = $this->Shippings->find('all', [
-					'conditions' => ['bidinfo_id' => $bidinfo_id]
-				])->first();
-			} catch (Exception $e) {
-				$shippingTo = null;
+			if ($this->request->is('post')) {
+				$rating = $this->Ratings->patchEntity($rating, $this->request->getData());
+				if ($this->Ratings->save($rating)) {
+					$this->Flash->success(__('取引評価の保存をしました'));
+
+					return $this->redirect([
+						'controller' => 'auction', 'action' => 'contact',
+						$rating->bidinfo_id
+					]);
+				}
+				$this->Flash->error(__('保存に失敗しましたもう一度やり直してください'));
 			}
-
-			$this->set(compact(
-				'bidinfo_id',
-				'shippingInfo',
-				'shippingTo',
-				'bidinfo',
-				'permitted_id',
-				'exhibitor_id',
-				'bidder_id',
-				'rating',
-				'hasRated'
-			));
-		} catch (Exception $e) {
-			$bidinfo = null;
+			$bidinfo = $this->Ratings->Bidinfo->find('list', ['limit' => 200]);
+			$this->set(compact('rating', 'bidinfo'));
 		}
+		// Ratingを新たに用意
+		$rating = $this->Ratings->newEntity();
+		// shippingInfoを新たに用意
+		$shippingInfo = $this->Shippings->newEntity();
+
+		// POST送信時の処理
+		// bidinfo_idが$bidinfo_idの$shippingToを取得する
+		try {
+			$shippingTo = $this->Shippings->find('all', [
+				'conditions' => ['bidinfo_id' => $bidinfo_id]
+			])->first();
+		} catch (Exception $e) {
+			$shippingTo = null;
+		}
+
+		$this->set(compact(
+			'bidinfo_id',
+			'shippingInfo',
+			'shippingTo',
+			'bidinfo',
+			'permitted_id',
+			'exhibitor_id',
+			'bidder_id',
+			'rating',
+			'hasRated'
+		));
 	}
 
 	public function shipping($bidinfo_id = null)
 	{
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-		try {
-			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-				'contain' => ['Biditems', 'Biditems.Users', 'Users']
-			]);
+		$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+			'contain' => ['Biditems', 'Biditems.Users', 'Users']
+		]);
 
-			//落札者IDを定義
-			$bidder_id = $bidinfo->user_id;
+		//落札者IDを定義
+		$bidder_id = $bidinfo->user_id;
 
-			// アクセスを許可するユーザのIDを配列$permitted_idに格納
-			$permitted_id = array($bidder_id);
+		// アクセスを許可するユーザのIDを配列$permitted_idに格納
+		$permitted_id = array($bidder_id);
 
-			// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
-			if (!in_array($this->Auth->user('id'), $permitted_id)) {
-				$this->Flash->error('アクセス権限がありません。');
-				return $this->redirect(['action' => 'index']);
+		// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+		if (!in_array($this->Auth->user('id'), $permitted_id)) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+		$shippingInfo = $this->Shippings->newEntity();
+
+		// POST送信時の処理
+		if ($this->request->is('post')) {
+			// 送信されたフォームで$shippingInfoを更新
+			$shippingInfo = $this->Shippings->patchEntity($shippingInfo, $this->request->getData());
+
+			$shippingInfo['bidinfo_id'] = $bidinfo_id;
+			$shippingInfo['user_id'] = $this->Auth->user('id');
+			$shippingInfo['is_shipped'] = 0;
+			$shippingInfo['is_received'] = 0;
+			// shippingを保存
+			if ($this->Shippings->save($shippingInfo)) {
+				$this->Flash->success(__('保存しました。'));
+				return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+			} else {
+				$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
 			}
-			$shippingInfo = $this->Shippings->newEntity();
-
-			// POST送信時の処理
-			if ($this->request->is('post')) {
-				// 送信されたフォームで$shippingInfoを更新
-				$shippingInfo = $this->Shippings->patchEntity($shippingInfo, $this->request->getData());
-
-				$shippingInfo['bidinfo_id'] = $bidinfo_id;
-				$shippingInfo['user_id'] = $this->Auth->user('id');
-				$shippingInfo['is_shipped'] = 0;
-				$shippingInfo['is_received'] = 0;
-				// shippingを保存
-				if ($this->Shippings->save($shippingInfo)) {
-					$this->Flash->success(__('保存しました。'));
-					return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
-				} else {
-					$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
-				}
-			}
-		} catch (Exception $e) {
-			$bidinfo = null;
 		}
 	}
 	public function itemShipped($bidinfo_id = null)
 	{
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-		try {
-			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-				'contain' => ['Biditems', 'Biditems.Users', 'Users']
-			]);
+		$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+			'contain' => ['Biditems', 'Biditems.Users', 'Users']
+		]);
 
-			// 出品者IDを定義
-			$exhibitor_id = $bidinfo->biditem->user_id;
+		// 出品者IDを定義
+		$exhibitor_id = $bidinfo->biditem->user_id;
 
-			// アクセスを許可するユーザのIDを配列$permitted_idに格納
-			$permitted_id = array($exhibitor_id);
+		// アクセスを許可するユーザのIDを配列$permitted_idに格納
+		$permitted_id = array($exhibitor_id);
 
-			// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
-			if (!in_array($this->Auth->user('id'), $permitted_id)) {
-				$this->Flash->error('アクセス権限がありません。');
-				return $this->redirect(['action' => 'index']);
-			}
-			$shippingId = $this->request->query['id'];
-			$shippingInfo = $this->Shippings->get($shippingId);
-			$shippingInfo->is_shipped = 1;
-			$this->Shippings->save($shippingInfo);
-
-			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
-		} catch (Exception $e) {
-			$bidinfo = null;
+		// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+		if (!in_array($this->Auth->user('id'), $permitted_id)) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
 		}
+		$shippingId = $this->request->query['id'];
+		$shippingInfo = $this->Shippings->get($shippingId);
+		$shippingInfo->is_shipped = 1;
+		$this->Shippings->save($shippingInfo);
+
+		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
 	}
 
 	public function itemReceived($bidinfo_id = null)
 	{
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-		try {
-			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-				'contain' => ['Biditems', 'Biditems.Users', 'Users']
-			]);
+		$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+			'contain' => ['Biditems', 'Biditems.Users', 'Users']
+		]);
 
-			//落札者IDを定義
-			$bidder_id = $bidinfo->user_id;
+		//落札者IDを定義
+		$bidder_id = $bidinfo->user_id;
 
-			// アクセスを許可するユーザのIDを配列$permitted_idに格納
-			$permitted_id = array($bidder_id);
+		// アクセスを許可するユーザのIDを配列$permitted_idに格納
+		$permitted_id = array($bidder_id);
 
-			// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
-			if (!in_array($this->Auth->user('id'), $permitted_id)) {
-				$this->Flash->error('アクセス権限がありません。');
-				return $this->redirect(['action' => 'index']);
-			}
-			$shippingId = $this->request->query['id'];
-			$shippingInfo = $this->Shippings->get($shippingId);
-			$shippingInfo->is_received = 1;
-			$this->Shippings->save($shippingInfo);
-
-			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
-		} catch (Exception $e) {
-			$bidinfo = null;
+		// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+		if (!in_array($this->Auth->user('id'), $permitted_id)) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
 		}
+		$shippingId = $this->request->query['id'];
+		$shippingInfo = $this->Shippings->get($shippingId);
+		$shippingInfo->is_received = 1;
+		$this->Shippings->save($shippingInfo);
+
+		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
 	}
 }
