@@ -240,29 +240,27 @@ class AuctionController extends AuctionBaseController
 		if (!in_array($this->Auth->user('id'), $permitted_id)) {
 			$this->Flash->error('アクセス権限がありません。');
 			return $this->redirect(['action' => 'index']);
+		}
+		//POST送信時の処理
+		if ($this->request->is('post')) {
 			$rating = $this->Ratings->newEntity();
-
-			if ($this->request->is('post')) {
-				$rating = $this->Ratings->patchEntity($rating, $this->request->getData());
-				if ($this->Ratings->save($rating)) {
-					$this->Flash->success(__('取引評価の保存をしました'));
-
-					return $this->redirect([
-						'controller' => 'auction', 'action' => 'contact',
-						$rating->bidinfo_id
-					]);
-				}
+			$rating = $this->Ratings->patchEntity($rating, $this->request->getData());
+			if ($this->Ratings->save($rating)) {
+				$this->Flash->success(__('取引評価の保存をしました'));
+				return $this->redirect([
+					'controller' => 'auction', 'action' => 'contact',
+					$rating->bidinfo_id
+				]);
+			} else {
 				$this->Flash->error(__('保存に失敗しましたもう一度やり直してください'));
 			}
-			$bidinfo = $this->Ratings->Bidinfo->find('list', ['limit' => 200]);
-			$this->set(compact('rating', 'bidinfo'));
 		}
+
 		// Ratingを新たに用意
 		$rating = $this->Ratings->newEntity();
 		// shippingInfoを新たに用意
 		$shippingInfo = $this->Shippings->newEntity();
 
-		// POST送信時の処理
 		// bidinfo_idが$bidinfo_idの$shippingToを取得する
 		try {
 			$shippingTo = $this->Shippings->find('all', [
@@ -323,6 +321,7 @@ class AuctionController extends AuctionBaseController
 			}
 		}
 	}
+
 	public function itemShipped($bidinfo_id = null)
 	{
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
