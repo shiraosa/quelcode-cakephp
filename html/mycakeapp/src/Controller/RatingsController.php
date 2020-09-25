@@ -92,6 +92,33 @@ class RatingsController extends AuctionBaseController
             $this->Flash->error('アクセス権限がありません。');
             return $this->redirect(['action' => 'index']);
         }
+        //発送と受け取りが完了しているかチェック
+        try {
+            $shippingInfo = $this->Shippings->find('all', [
+                'conditions' => ['bidinfo_id' => $bidinfo_id]
+            ])->first();
+        } catch (Exception $e) {
+            $this->Flash->error('取引が完了していません');
+            return $this->redirect(['controller' => 'auction', 'action' => 'contact', $bidinfo_id]);
+        }
+        if (empty($shippingInfo->is_received) || empty($shippingInfo->is_received)) {
+            $this->Flash->error('取引が完了していません');
+            return $this->redirect(['controller' => 'auction', 'action' => 'contact', $bidinfo_id]);
+        }
+
+        //既にレビューを投稿しているかチェック
+        try {
+            $postedRate = $this->Ratings->find('all', [
+                'conditions' => ['bidinfo_id' => $bidinfo_id, 'rated_by_user_id' => $this->Auth->user('id')]
+            ])->first();
+        } catch (Exception $e) {
+            $postedRate = null;
+        }
+        if (!empty($postedRate)) {
+            $this->Flash->error('既にレビュー済みです');
+            return $this->redirect(['controller' => 'auction', 'action' => 'contact', $bidinfo_id]);
+        }
+
         // POST送信時の処理
         if ($this->request->is('post')) {
             //インスタンスを用意
