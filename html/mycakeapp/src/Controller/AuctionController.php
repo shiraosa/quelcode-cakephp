@@ -341,8 +341,22 @@ class AuctionController extends AuctionBaseController
 			$this->Flash->error('アクセス権限がありません。');
 			return $this->redirect(['action' => 'index']);
 		}
-		$shippingId = $this->request->query['id'];
-		$shippingInfo = $this->Shippings->get($shippingId);
+
+		//配送先が入力されてないもしくは存在しないshippingIdを入力された場合リダイレクトする
+		try {
+			$shippingId = $this->request->query['id'];
+			$shippingInfo = $this->Shippings->get($shippingId);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		//shippingIdがログイン中のユーザIDが$permitted_idに含まれるBidinfoに紐づいてるかチェック
+		if ($shippingInfo->bidinfo_id !== $bidinfo->id) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
 		$shippingInfo->is_shipped = 1;
 		$this->Shippings->save($shippingInfo);
 
@@ -367,10 +381,29 @@ class AuctionController extends AuctionBaseController
 			$this->Flash->error('アクセス権限がありません。');
 			return $this->redirect(['action' => 'index']);
 		}
-		$shippingId = $this->request->query['id'];
-		$shippingInfo = $this->Shippings->get($shippingId);
-		$shippingInfo->is_received = 1;
-		$this->Shippings->save($shippingInfo);
+
+		//存在しないshippingIdを入力された場合リダイレクトする
+		try {
+			$shippingId = $this->request->query['id'];
+			$shippingInfo = $this->Shippings->get($shippingId);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		//shippingIdがログイン中のユーザIDが$permitted_idに含まれるBidinfoに紐づいてるかチェック。紐づいてなければリダイレクト
+		if ($shippingInfo->bidinfo_id !== $bidinfo->id) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+		//発送されているかチェックする
+		if ($shippingInfo->is_shipped) {
+			$shippingInfo->is_received = 1;
+			$this->Shippings->save($shippingInfo);
+		} else {
+			$this->Flash->error('商品が発送されていません');
+			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+		}
 
 		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
 	}
