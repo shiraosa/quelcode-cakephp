@@ -225,9 +225,14 @@ class AuctionController extends AuctionBaseController
 			$hasRated = null;
 		}
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-		$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-			'contain' => ['Biditems', 'Biditems.Users', 'Users']
-		]);
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
 
 		// 出品者ID、落札者IDをそれぞれ定義
 		$exhibitor_id = $bidinfo->biditem->user_id;
@@ -286,10 +291,14 @@ class AuctionController extends AuctionBaseController
 	public function shipping($bidinfo_id = null)
 	{
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-		$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-			'contain' => ['Biditems', 'Biditems.Users', 'Users']
-		]);
-
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
 		//落札者IDを定義
 		$bidder_id = $bidinfo->user_id;
 
@@ -301,6 +310,19 @@ class AuctionController extends AuctionBaseController
 			$this->Flash->error('アクセス権限がありません。');
 			return $this->redirect(['action' => 'index']);
 		}
+		//既に配送情報があるかチェック,あった場合はリダイレクト
+		try {
+			$postedInfo = $this->Shippings->find('all', [
+				'conditions' => ['bidinfo_id' => $bidinfo_id]
+			])->first();
+		} catch (Exception $e) {
+			$postedInfo = null;
+		}
+		if (!empty($postedInfo)) {
+			$this->Flash->error('配送先情報は入力済みです');
+			return $this->redirect(['action' => 'contact', $bidinfo_id]);
+		}
+
 		$shippingInfo = $this->Shippings->newEntity();
 
 		// POST送信時の処理
@@ -325,9 +347,14 @@ class AuctionController extends AuctionBaseController
 	public function itemShipped($bidinfo_id = null)
 	{
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-		$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-			'contain' => ['Biditems', 'Biditems.Users', 'Users']
-		]);
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
 
 		// 出品者IDを定義
 		$exhibitor_id = $bidinfo->biditem->user_id;
@@ -341,21 +368,17 @@ class AuctionController extends AuctionBaseController
 			return $this->redirect(['action' => 'index']);
 		}
 
-		//配送先が入力されてないもしくは存在しないshippingIdを入力された場合リダイレクトする
+		//bidinfo_idが$bidinfo_idのShippingを$shippingInfoに格納
 		try {
-			$shippingId = $this->request->query['id'];
-			$shippingInfo = $this->Shippings->get($shippingId);
+			$shippingInfo = $this->Shippings->find('all', [
+				'conditions' => ['bidinfo_id' => $bidinfo_id]
+			])->first();
 		} catch (Exception $e) {
 			$this->Flash->error('アクセス権限がありません。');
 			return $this->redirect(['action' => 'index']);
 		}
 
-		//shippingIdがログイン中のユーザIDが$permitted_idに含まれるBidinfoに紐づいてるかチェック
-		if ($shippingInfo->bidinfo_id !== $bidinfo->id) {
-			$this->Flash->error('アクセス権限がありません。');
-			return $this->redirect(['action' => 'index']);
-		}
-
+		//発送完了フラグを１にして保存
 		$shippingInfo->is_shipped = 1;
 		$this->Shippings->save($shippingInfo);
 
@@ -365,9 +388,14 @@ class AuctionController extends AuctionBaseController
 	public function itemReceived($bidinfo_id = null)
 	{
 		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
-		$bidinfo = $this->Bidinfo->get($bidinfo_id, [
-			'contain' => ['Biditems', 'Biditems.Users', 'Users']
-		]);
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
 
 		//落札者IDを定義
 		$bidder_id = $bidinfo->user_id;
@@ -381,20 +409,16 @@ class AuctionController extends AuctionBaseController
 			return $this->redirect(['action' => 'index']);
 		}
 
-		//存在しないshippingIdを入力された場合リダイレクトする
+		//bidinfo_idが$bidinfo_idのShippingを$shippingInfoに格納
 		try {
-			$shippingId = $this->request->query['id'];
-			$shippingInfo = $this->Shippings->get($shippingId);
+			$shippingInfo = $this->Shippings->find('all', [
+				'conditions' => ['bidinfo_id' => $bidinfo_id]
+			])->first();
 		} catch (Exception $e) {
 			$this->Flash->error('アクセス権限がありません。');
 			return $this->redirect(['action' => 'index']);
 		}
 
-		//shippingIdがログイン中のユーザIDが$permitted_idに含まれるBidinfoに紐づいてるかチェック。紐づいてなければリダイレクト
-		if ($shippingInfo->bidinfo_id !== $bidinfo->id) {
-			$this->Flash->error('アクセス権限がありません。');
-			return $this->redirect(['action' => 'index']);
-		}
 		//発送されているかチェックする
 		if ($shippingInfo->is_shipped) {
 			$shippingInfo->is_received = 1;

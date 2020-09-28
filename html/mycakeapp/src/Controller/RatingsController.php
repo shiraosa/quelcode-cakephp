@@ -101,7 +101,7 @@ class RatingsController extends AuctionBaseController
             $this->Flash->error('取引が完了していません');
             return $this->redirect(['controller' => 'auction', 'action' => 'contact', $bidinfo_id]);
         }
-        if (empty($shippingInfo->is_received) || empty($shippingInfo->is_received)) {
+        if (empty($shippingInfo->is_received) || empty($shippingInfo->is_shipped)) {
             $this->Flash->error('取引が完了していません');
             return $this->redirect(['controller' => 'auction', 'action' => 'contact', $bidinfo_id]);
         }
