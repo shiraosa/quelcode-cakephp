@@ -1,8 +1,9 @@
 <?php
+
 namespace App\Controller;
 
 use App\Controller\AppController;
-
+use App\Model\Entity\Bidinfo;
 use Cake\Event\Event; // added.
 use Exception; // added.
 
@@ -24,6 +25,8 @@ class AuctionController extends AuctionBaseController
 		$this->loadModel('Bidrequests');
 		$this->loadModel('Bidinfo');
 		$this->loadModel('Bidmessages');
+		$this->loadModel('Ratings');
+		$this->loadModel('Shippings');
 		// ログインしているユーザー情報をauthuserに設定
 		$this->set('authuser', $this->Auth->user());
 		// レイアウトをauctionに変更
@@ -35,8 +38,9 @@ class AuctionController extends AuctionBaseController
 	{
 		// ページネーションでBiditemsを取得
 		$auction = $this->paginate('Biditems', [
-			'order' =>['endtime'=>'desc'], 
-			'limit' => 10]);
+			'order' => ['endtime' => 'desc'],
+			'limit' => 10
+		]);
 		$this->set(compact('auction'));
 	}
 
@@ -58,11 +62,12 @@ class AuctionController extends AuctionBaseController
 			$bidinfo->biditem_id = $id;
 			// 最高金額のBidrequestを検索
 			$bidrequest = $this->Bidrequests->find('all', [
-				'conditions'=>['biditem_id'=>$id], 
+				'conditions' => ['biditem_id' => $id],
 				'contain' => ['Users'],
-				'order'=>['price'=>'desc']])->first();
+				'order' => ['price' => 'desc']
+			])->first();
 			// Bidrequestが得られた時の処理
-			if (!empty($bidrequest)){
+			if (!empty($bidrequest)) {
 				// Bidinfoの各種プロパティを設定して保存する
 				$bidinfo->user_id = $bidrequest->user->id;
 				$bidinfo->user = $bidrequest->user;
@@ -70,13 +75,14 @@ class AuctionController extends AuctionBaseController
 				$this->Bidinfo->save($bidinfo);
 			}
 			// Biditemのbidinfoに$bidinfoを設定
-			$biditem->bidinfo = $bidinfo;		
+			$biditem->bidinfo = $bidinfo;
 		}
 		// Bidrequestsからbiditem_idが$idのものを取得
 		$bidrequests = $this->Bidrequests->find('all', [
-			'conditions'=>['biditem_id'=>$id], 
+			'conditions' => ['biditem_id' => $id],
 			'contain' => ['Users'],
-			'order'=>['price'=>'desc']])->toArray();
+			'order' => ['price' => 'desc']
+		])->toArray();
 		// オブジェクト類をテンプレート用に設定
 		$this->set(compact('biditem', 'bidrequests'));
 	}
@@ -92,11 +98,11 @@ class AuctionController extends AuctionBaseController
 			// 拡張子をチェック
 			$image_type = substr(strtolower(strrchr($file['name'], '.')), 1);
 			$arr_type = array('jpg', 'jpeg', 'gif', 'png', 'JPG', 'JPEG', 'GIF', 'PNG');
-			if(in_array($image_type, $arr_type)){
+			if (in_array($image_type, $arr_type)) {
 				// 保存時にidが生成される
 				$biditem = $this->Biditems->patchEntity($biditem, $this->request->getData());
 				$biditem['image_path'] = "temp";
-				if($this->Biditems->save($biditem)){
+				if ($this->Biditems->save($biditem)) {
 					// idを画像ファイル名に利用する
 					$biditem_id = $biditem->id;
 					$path = WWW_ROOT . 'img/item_image/' . $biditem_id . "." . $image_type;
@@ -112,7 +118,7 @@ class AuctionController extends AuctionBaseController
 				}
 				// 失敗時のメッセージ
 				$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
-			}else{
+			} else {
 				// 画像の拡張子が違った場合のメッセージ
 				$this->Flash->error(__('拡張子が.jpg .jpeg .png .gif .JPG .JPEG .PNG .GIFのファイルをアップロードしてください'));
 			}
@@ -140,7 +146,7 @@ class AuctionController extends AuctionBaseController
 				// 成功時のメッセージ
 				$this->Flash->success(__('入札を送信しました。'));
 				// トップページにリダイレクト
-				return $this->redirect(['action'=>'view', $biditem_id]);
+				return $this->redirect(['action' => 'view', $biditem_id]);
 			}
 			// 失敗時のメッセージ
 			$this->Flash->error(__('入札に失敗しました。もう一度入力下さい。'));
@@ -149,7 +155,7 @@ class AuctionController extends AuctionBaseController
 		$biditem = $this->Biditems->get($biditem_id);
 		$this->set(compact('bidrequest', 'biditem'));
 	}
-	
+
 	// 落札者とのメッセージ
 	public function msg($bidinfo_id = null)
 	{
@@ -167,15 +173,16 @@ class AuctionController extends AuctionBaseController
 			}
 		}
 		try { // $bidinfo_idからBidinfoを取得する
-			$bidinfo = $this->Bidinfo->get($bidinfo_id, ['contain'=>['Biditems']]);
-		} catch(Exception $e){
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, ['contain' => ['Biditems']]);
+		} catch (Exception $e) {
 			$bidinfo = null;
 		}
 		// Bidmessageをbidinfo_idとuser_idで検索
-		$bidmsgs = $this->Bidmessages->find('all',[
-			'conditions'=>['bidinfo_id'=>$bidinfo_id],
+		$bidmsgs = $this->Bidmessages->find('all', [
+			'conditions' => ['bidinfo_id' => $bidinfo_id],
 			'contain' => ['Users'],
-			'order'=>['created'=>'desc']]);
+			'order' => ['created' => 'desc']
+		]);
 		$this->set(compact('bidmsgs', 'bidinfo', 'bidmsg'));
 	}
 
@@ -184,10 +191,11 @@ class AuctionController extends AuctionBaseController
 	{
 		// 自分が落札したBidinfoをページネーションで取得
 		$bidinfo = $this->paginate('Bidinfo', [
-			'conditions'=>['Bidinfo.user_id'=>$this->Auth->user('id')], 
+			'conditions' => ['Bidinfo.user_id' => $this->Auth->user('id')],
 			'contain' => ['Users', 'Biditems'],
-			'order'=>['created'=>'desc'],
-			'limit' => 10])->toArray();
+			'order' => ['created' => 'desc'],
+			'limit' => 10
+		])->toArray();
 		$this->set(compact('bidinfo'));
 	}
 
@@ -196,10 +204,230 @@ class AuctionController extends AuctionBaseController
 	{
 		// 自分が出品したBiditemをページネーションで取得
 		$biditems = $this->paginate('Biditems', [
-			'conditions'=>['Biditems.user_id'=>$this->Auth->user('id')], 
+			'conditions' => ['Biditems.user_id' => $this->Auth->user('id')],
 			'contain' => ['Users', 'Bidinfo'],
-			'order'=>['created'=>'desc'],
-			'limit' => 10])->toArray();
+			'order' => ['created' => 'desc'],
+			'limit' => 10
+		])->toArray();
 		$this->set(compact('biditems'));
+	}
+
+	// 取引成立後の画面
+	public function contact($bidinfo_id = null)
+	{
+		// bidinfo_idが$bidinfo_idの$ratingをRatingsテーブルから取得
+		try {
+			$hasRated = $this->Ratings->find()
+				->where(['bidinfo_id' => $bidinfo_id])
+				->andWhere(['rated_by_user_id' => $this->Auth->user('id')]);
+			$hasRated = $hasRated->first();
+		} catch (Exception $e) {
+			$hasRated = null;
+		}
+		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		// 出品者ID、落札者IDをそれぞれ定義
+		$exhibitor_id = $bidinfo->biditem->user_id;
+		$bidder_id = $bidinfo->user_id;
+
+		// 上の二つをアクセスを許可するユーザのIDに設定し配列$permitted_idに格納
+		$permitted_id = array($exhibitor_id, $bidder_id);
+
+		// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+		if (!in_array($this->Auth->user('id'), $permitted_id)) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+		//POST送信時の処理
+		if ($this->request->is('post')) {
+			$rating = $this->Ratings->newEntity();
+			$rating = $this->Ratings->patchEntity($rating, $this->request->getData());
+			if ($this->Ratings->save($rating)) {
+				$this->Flash->success(__('取引評価の保存をしました'));
+				return $this->redirect([
+					'controller' => 'auction', 'action' => 'contact',
+					$rating->bidinfo_id
+				]);
+			} else {
+				$this->Flash->error(__('保存に失敗しましたもう一度やり直してください'));
+			}
+		}
+
+		// Ratingを新たに用意
+		$rating = $this->Ratings->newEntity();
+		// shippingInfoを新たに用意
+		$shippingInfo = $this->Shippings->newEntity();
+
+		// bidinfo_idが$bidinfo_idの$shippingToを取得する
+		try {
+			$shippingTo = $this->Shippings->find('all', [
+				'conditions' => ['bidinfo_id' => $bidinfo_id]
+			])->first();
+		} catch (Exception $e) {
+			$shippingTo = null;
+		}
+
+		$this->set(compact(
+			'bidinfo_id',
+			'shippingInfo',
+			'shippingTo',
+			'bidinfo',
+			'permitted_id',
+			'exhibitor_id',
+			'bidder_id',
+			'rating',
+			'hasRated'
+		));
+	}
+
+	public function shipping($bidinfo_id = null)
+	{
+		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+		//落札者IDを定義
+		$bidder_id = $bidinfo->user_id;
+
+		// アクセスを許可するユーザのIDを配列$permitted_idに格納
+		$permitted_id = array($bidder_id);
+
+		// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+		if (!in_array($this->Auth->user('id'), $permitted_id)) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+		//既に配送情報があるかチェック,あった場合はリダイレクト
+		try {
+			$postedInfo = $this->Shippings->find('all', [
+				'conditions' => ['bidinfo_id' => $bidinfo_id]
+			])->first();
+		} catch (Exception $e) {
+			$postedInfo = null;
+		}
+		if (!empty($postedInfo)) {
+			$this->Flash->error('配送先情報は入力済みです');
+			return $this->redirect(['action' => 'contact', $bidinfo_id]);
+		}
+
+		$shippingInfo = $this->Shippings->newEntity();
+
+		// POST送信時の処理
+		if ($this->request->is('post')) {
+			// 送信されたフォームで$shippingInfoを更新
+			$shippingInfo = $this->Shippings->patchEntity($shippingInfo, $this->request->getData());
+
+			$shippingInfo['bidinfo_id'] = $bidinfo_id;
+			$shippingInfo['user_id'] = $this->Auth->user('id');
+			$shippingInfo['is_shipped'] = 0;
+			$shippingInfo['is_received'] = 0;
+			// shippingを保存
+			if ($this->Shippings->save($shippingInfo)) {
+				$this->Flash->success(__('保存しました。'));
+				return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+			} else {
+				$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
+			}
+		}
+	}
+
+	public function itemShipped($bidinfo_id = null)
+	{
+		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		// 出品者IDを定義
+		$exhibitor_id = $bidinfo->biditem->user_id;
+
+		// アクセスを許可するユーザのIDを配列$permitted_idに格納
+		$permitted_id = array($exhibitor_id);
+
+		// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+		if (!in_array($this->Auth->user('id'), $permitted_id)) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		//bidinfo_idが$bidinfo_idのShippingを$shippingInfoに格納
+		try {
+			$shippingInfo = $this->Shippings->find('all', [
+				'conditions' => ['bidinfo_id' => $bidinfo_id]
+			])->first();
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		//発送完了フラグを１にして保存
+		$shippingInfo->is_shipped = 1;
+		$this->Shippings->save($shippingInfo);
+
+		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+	}
+
+	public function itemReceived($bidinfo_id = null)
+	{
+		// idが$bidinfo_idのBidinfoを変数$bidinfoに格納
+		try {
+			$bidinfo = $this->Bidinfo->get($bidinfo_id, [
+				'contain' => ['Biditems', 'Biditems.Users', 'Users']
+			]);
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		//落札者IDを定義
+		$bidder_id = $bidinfo->user_id;
+
+		// アクセスを許可するユーザのIDを配列$permitted_idに格納
+		$permitted_id = array($bidder_id);
+
+		// ログイン中のユーザIDが$permitted_idに含まれない場合は、アクセスを許可せずindexにリダイレクト
+		if (!in_array($this->Auth->user('id'), $permitted_id)) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		//bidinfo_idが$bidinfo_idのShippingを$shippingInfoに格納
+		try {
+			$shippingInfo = $this->Shippings->find('all', [
+				'conditions' => ['bidinfo_id' => $bidinfo_id]
+			])->first();
+		} catch (Exception $e) {
+			$this->Flash->error('アクセス権限がありません。');
+			return $this->redirect(['action' => 'index']);
+		}
+
+		//発送されているかチェックする
+		if ($shippingInfo->is_shipped) {
+			$shippingInfo->is_received = 1;
+			$this->Shippings->save($shippingInfo);
+		} else {
+			$this->Flash->error('商品が発送されていません');
+			return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
+		}
+
+		return $this->redirect(['action' => 'contact', $shippingInfo->bidinfo_id]);
 	}
 }
